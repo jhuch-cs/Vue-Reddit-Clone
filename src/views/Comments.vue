@@ -112,7 +112,7 @@ export default {
   background-color: rgb(44, 59, 73);
 }
 
-textarea[data-v-646a562e] {
+textarea {
   margin-top: 15px;
   resize: vertical;
   max-width: 100%;
