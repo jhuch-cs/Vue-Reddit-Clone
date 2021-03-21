@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
-import Post from '../views/Post.vue'
+import Comments from '../views/Comments.vue'
 
 Vue.use(VueRouter)
 
@@ -14,7 +14,7 @@ const routes = [
   {
     path: '/post/:id',
     name: 'post',
-    component: Post
+    component: Comments
   }
 ]
 

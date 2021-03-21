@@ -1,0 +1,180 @@
+<template>
+  <div class="post">
+    <div class="post-content">
+      <Post :post="post" />
+      <div class="new-comment">
+        <form class="pure-form" v-on:submit.prevent="newComment">
+          <textarea
+            name="paragraph_text"
+            cols="50"
+            rows="10"
+            placeholder="What are your thoughts?"
+            v-model="commentText"
+          ></textarea>
+          <br />
+          <button type="submit">Comment</button>
+        </form>
+      </div>
+    </div>
+    <div class="sort">
+      <button type="button" v-on:click="sortTop" v-bind:class="{filled: this.sort == 'top'}">Top</button>
+      <button type="button" v-on:click="sortNew" v-bind:class="{filled: this.sort == 'new'}">New</button>
+    </div>
+    <div class="comments">
+      <div
+        class="comment"
+        v-for="comment in sortedComments"
+        :key="comment.id"
+      >
+        <Comment :comment="comment" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import Post from "@/components/Post.vue";
+import Comment from "@/components/Comment.vue";
+
+export default {
+  name: "Comments",
+  components: {
+    Post,
+    Comment,
+  },
+  data() {
+    return {
+      post: {},
+      commentText: "",
+      sort: "",
+    };
+  },
+  created() {
+    this.post = this.$root.$data.posts.find(
+      (post) => post.id === parseInt(this.$route.params.id)
+    );
+  },
+  methods: {
+    newComment() {
+      let newComment = {
+        points: 0,
+        user: "defaultUser",
+        text: this.commentText,
+        date: Date.now().toString(),
+        replies: [],
+        level: 0,
+      };
+      this.post.comments.push(newComment);
+      this.commentText = "";
+    },
+    sortTop() {
+      this.sort = "top";
+    },
+    sortNew() {
+      this.sort = "new";
+    },
+  },
+  computed: {
+    sortedComments() {
+      if (this.sort === "top") {
+        return this.post.comments.slice().sort((comment1, comment2) => {
+          let a = comment1.points;
+          let b = comment2.points;
+          return b - a;
+        });
+      } else if (this.sort === "new") {
+        return this.post.comments.slice().sort((comment1, comment2) => {
+          let a = new Date(comment1);
+          let b = new Date(comment2);
+          return (a < b) - (a > b);
+        });
+      } else {
+        return this.post.comments;
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.post {
+  width: 50%;
+  margin: 0 auto;
+  margin-bottom: 20px;
+}
+
+.post-content {
+  border: 1px black solid;
+  border-radius: 10px;
+  padding: 5px;
+  background-color: rgb(44, 59, 73);
+}
+
+textarea[data-v-646a562e] {
+  margin-top: 15px;
+  resize: vertical;
+  max-width: 100%;
+  background-color: rgb(44, 59, 73);
+  outline: none;
+  box-shadow: none;
+}
+
+form > button { 
+  background-color: #2c3e50;
+  border: 1px white solid;
+  border-radius: 5px;
+  margin-top: 5px;
+}
+
+.sort {
+  display: flex;
+  margin-top: 10px;
+  border: 1px black solid;
+  border-radius: 10px;
+  height: 40px;
+  padding: 5px;
+  background-color: rgb(44, 59, 73);
+}
+
+button {
+  background-color: #2c3e50;
+  border: 1px white solid;
+  border-radius: 15px;
+  margin: 0 8px;
+}
+
+.filled {
+  background-color: white;
+  color: #2c3e50;
+}
+
+@media only screen and (max-width: 600px) {
+  .post {
+    width: 100%;
+  }
+
+  body {
+    margin: 10px 0;
+  }
+}
+
+@media only screen and (min-width: 600px) and (max-width: 800px) {
+  .post {
+    width: 90% !important;
+  }
+
+  body {
+    margin: 10px 0;
+  }
+}
+
+@media only screen and (min-width: 800px) and (max-width: 1400px) {
+  .post {
+    width: 80% !important;
+  }
+
+  body {
+    margin: 10px 0;
+  }
+}
+</style>
