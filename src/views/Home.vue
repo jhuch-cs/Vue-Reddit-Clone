@@ -8,6 +8,7 @@
       </div>
     </div>
     <PostList :posts="posts"/>
+    <h2 class="footer"><a href="https://github.com/jhuch-cs/Vue-Reddit-Clone">Github</a></h2>
   </div>
 </template>
 
@@ -71,5 +72,14 @@ input {
   width: 100%;
   height: 40px;
   background-color: #2c3e50;
+}
+
+.footer a {
+  text-decoration: none !important;
+  color: white;  
+}
+
+.footer a:hover {
+  color: lightblue;
 }
 </style>

@@ -28,7 +28,9 @@
       >
         <Comment :comment="comment" />
       </div>
+      <p v-if="sortedComments.length == 0">No comments yet!</p>
     </div>
+    <h2 class="footer"><a href="https://github.com/jhuch-cs/Vue-Reddit-Clone">Github</a></h2>
   </div>
 </template>
 
@@ -176,5 +178,14 @@ button {
   body {
     margin: 10px 0;
   }
+}
+
+.footer a {
+  text-decoration: none !important;
+  color: white;  
+}
+
+.footer a:hover {
+  color: lightblue;
 }
 </style>
