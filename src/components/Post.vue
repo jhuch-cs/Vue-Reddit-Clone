@@ -158,6 +158,7 @@ export default {
   margin: 0;
   padding: 0;
   font-weight: normal;
+  text-align: left;
 }
 
 .info h2 {

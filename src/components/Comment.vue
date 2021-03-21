@@ -337,6 +337,8 @@ textarea {
   outline: none;
   box-shadow: none;
   width: 100%;
+  -webkit-user-select: auto;
+  user-select: auto;
 }
 
 form button {
@@ -347,6 +349,6 @@ form button {
 }
 
 .info {
-  width: 80%;
+  width: 100%;
 }
 </style>

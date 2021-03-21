@@ -119,6 +119,8 @@ textarea {
   background-color: rgb(44, 59, 73);
   outline: none;
   box-shadow: none;
+  -webkit-user-select: auto;
+  user-select: auto;
 }
 
 form > button { 
