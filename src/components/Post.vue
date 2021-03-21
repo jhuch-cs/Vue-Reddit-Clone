@@ -168,7 +168,7 @@ export default {
 }
 
 .content {
-  width: 100%;
+  width: 95%;
   margin: 0 10px;
 }
 

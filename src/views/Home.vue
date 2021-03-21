@@ -82,4 +82,10 @@ input {
 .footer a:hover {
   color: lightblue;
 }
+
+@media only screen and (max-width: 600px) {
+  .search {
+    width: 100%;
+  }
+}
 </style>
