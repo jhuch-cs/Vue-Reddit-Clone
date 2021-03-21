@@ -7,18 +7,20 @@
         </form>
       </div>
     </div>
-    <PostList :posts="posts"/>
-    <h2 class="footer"><a href="https://github.com/jhuch-cs/Vue-Reddit-Clone">Github</a></h2>
+    <PostList :posts="posts" />
+    <h2 class="footer">
+      <a href="https://github.com/jhuch-cs/Vue-Reddit-Clone">Github</a>
+    </h2>
   </div>
 </template>
 
 <script>
-import PostList from '@/components/PostList.vue'
+import PostList from "@/components/PostList.vue";
 
 export default {
-  name: 'Home',
+  name: "Home",
   components: {
-    PostList
+    PostList,
   },
   data() {
     return {
@@ -28,15 +30,17 @@ export default {
   computed: {
     posts() {
       let text = this.searchText;
-      return this.$root.$data.posts.filter(post =>
-        (!post.image && post.text.toLowerCase().search(text.toLowerCase()) >= 0) ||
-        post.subreddit.toLowerCase().search(text.toLowerCase()) >= 0 || 
-        post.user.toLowerCase().search(text.toLowerCase()) >= 0 ||
-        post.title.toLowerCase().search(text.toLowerCase()) >= 0
+      return this.$root.$data.posts.filter(
+        (post) =>
+          (!post.image &&
+            post.text.toLowerCase().search(text.toLowerCase()) >= 0) ||
+          post.subreddit.toLowerCase().search(text.toLowerCase()) >= 0 ||
+          post.user.toLowerCase().search(text.toLowerCase()) >= 0 ||
+          post.title.toLowerCase().search(text.toLowerCase()) >= 0
       );
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -76,7 +80,7 @@ input {
 
 .footer a {
   text-decoration: none !important;
-  color: white;  
+  color: white;
 }
 
 .footer a:hover {
@@ -86,6 +90,11 @@ input {
 @media only screen and (max-width: 600px) {
   .search {
     width: 100%;
+  }
+
+  .pure-form input {
+    margin-bottom: 0px !important;
+    display: inline-block !important;
   }
 }
 </style>
