@@ -19,7 +19,7 @@
         </div>
         <input type="file" name="photo" @change="fileChanged" />
         <div class="post-body">
-          <form class="pure-form" v-on:click.prevent="uploadPost()">
+          <form class="pure-form">
             <textarea
               name="paragraph_text"
               cols="50"
@@ -29,7 +29,7 @@
               v-if="!this.file"
             ></textarea>
             <br />
-            <button type="submit">Post</button>
+            <button type="submit" v-on:click.prevent="uploadPost()">Post</button>
           </form>
         </div>
       </div>
@@ -77,6 +77,7 @@ export default {
         this.title = "";
         this.subreddit = "";
         this.postBody = "";
+        this.$router.push({name: 'Home'});
       } catch (error) {
         console.log(error);
       }
@@ -175,6 +176,10 @@ button {
   }
 
   .wrapper {
+    width: 100%;
+  }
+
+  .postInfo {
     width: 100%;
   }
 }

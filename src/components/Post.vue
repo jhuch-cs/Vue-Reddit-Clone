@@ -98,7 +98,7 @@ export default {
       }
       this.post.downvoted = true;
       this.post.upvoted = false;
-      axios.post(`/api/downvoteComment/${this.comment.id}`);
+      axios.post(`/api/downvotePost/${this.post.id}`);
     },
   },
 };

@@ -34,7 +34,7 @@ export default {
     };
   },
   created: async function () {
-    let response = await axios.get("/api/posts?new=1");
+    let response = await axios.get("/api/posts?top=1");
     this.retrievedPosts = response.data;
   },
   computed: {
