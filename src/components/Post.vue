@@ -18,7 +18,7 @@
       </div>
       <div class="info">
         <div class="details">
-          <img :src="this.post.icon" />
+          <img :src="'https://robohash.org/' + this.post.subreddit + '.png'" /> <!-- If we add functionality to create subreddits, fixme -->
           <h3>
             <a
               :href="'https://www.reddit.com/r/' + this.post.subreddit"
@@ -34,7 +34,7 @@
     <router-link :to="'/post/' + this.post.id">
       <div class="content">
         <div v-if="post.image" class="image">
-          <img :src="this.post.image" />
+          <img :src="'..' + this.post.image" />
         </div>
         <div v-else class="textContent">
           <p>{{ this.post.text }}</p>
@@ -45,6 +45,7 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
   name: "Post",
   props: {
@@ -83,6 +84,7 @@ export default {
       }
       this.post.upvoted = true;
       this.post.downvoted = false;
+      axios.post(`/api/upvotePost/${this.post.id}`); // TODO: Change this logic once we implement users and sessions
     },
     downvote() {
       if (this.post.downvoted) {
@@ -96,6 +98,7 @@ export default {
       }
       this.post.downvoted = true;
       this.post.upvoted = false;
+      axios.post(`/api/downvoteComment/${this.comment.id}`);
     },
   },
 };

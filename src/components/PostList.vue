@@ -29,6 +29,10 @@ export default {
 </script>
 
 <style scoped>
+.posts {
+  width: 100%;
+}
+
 .post {
   width: 70%;
   margin: 0 auto;

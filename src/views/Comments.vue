@@ -35,6 +35,7 @@
 </template>
 
 <script>
+import axios from "axios";
 import Post from "@/components/Post.vue";
 import Comment from "@/components/Comment.vue";
 
@@ -51,13 +52,12 @@ export default {
       sort: "",
     };
   },
-  created() {
-    this.post = this.$root.$data.posts.find(
-      (post) => post.id === parseInt(this.$route.params.id)
-    );
+  created: async function() {
+    let response = await axios.get(`/api/post/${this.$route.params.id}`);
+    this.post = response.data;
   },
   methods: {
-    newComment() {
+    async newComment() {
       let newComment = {
         points: 0,
         user: "defaultUser",
@@ -68,6 +68,8 @@ export default {
       };
       this.post.comments.push(newComment);
       this.commentText = "";
+      let response = await axios.post(`/api/replyToPost/${this.post.id}`, newComment);
+      newComment.id = response.data.id;
     },
     sortTop() {
       this.sort = "top";
@@ -88,9 +90,12 @@ export default {
         return this.post.comments.slice().sort((comment1, comment2) => {
           let a = new Date(comment1);
           let b = new Date(comment2);
-          return (a < b) - (a > b);
+          return (b < a) - (b > a);
         });
       } else {
+        if (this.post.comments === null || this.post.comments === undefined) {
+          return [];
+        }
         return this.post.comments;
       }
     },

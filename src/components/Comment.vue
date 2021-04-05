@@ -82,6 +82,7 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
   name: "Comment",
   props: {
@@ -130,6 +131,7 @@ export default {
       }
       this.comment.upvoted = true;
       this.comment.downvoted = false;
+      axios.post(`/api/upvoteComment/${this.comment.id}`); // TODO: Change this logic once we implement users and sessions
     },
     downvote() {
       if (this.comment.deleted) {
@@ -146,6 +148,7 @@ export default {
       }
       this.comment.downvoted = true;
       this.comment.upvoted = false;
+      axios.post(`/api/downvoteComment/${this.comment.id}`);
     },
     startReply() {
       this.isWritingReply = true;
@@ -156,7 +159,7 @@ export default {
       this.isWritingReply = false;
       this.replyText = this.comment.text;
     },
-    newComment() {
+    async newComment() {
       let currentLevel = this.comment.level;
       if (this.isWritingReply) {
         let newComment = {
@@ -168,21 +171,26 @@ export default {
           level: currentLevel + 1,
         };
         this.comment.replies.push(newComment);
+        let response = await axios.post(`/api/replyToComment/${this.comment.id}`, newComment);
+        newComment.id = response.data.id;
       } else {
         this.comment.text = this.replyText;
+        await axios.post(`/api/editComment/${this.comment.id}`, {text: this.replyText});
       }
       this.replyText = "";
       this.isWritingReply = false;
       this.isEditingComment = false;
     },
-    removeContents() {
+    async removeContents() {
       this.comment.text = "[deleted]";
+      await axios.post(`/api/editComment/${this.comment.id}`, {text: "[deleted]"});
     },
-    deleteComment() {
+    async deleteComment() {
       this.comment.deleted = true;
       this.comment.text = "";
       this.comment.upvoted = false;
       this.comment.downvoted = false;
+      await axios.delete(`/api/editComment/${this.comment.id}`);
     },
   },
   computed: {
