@@ -17,20 +17,32 @@
       </div>
     </div>
     <div class="sort">
-      <button type="button" v-on:click="sortTop" v-bind:class="{filled: this.sort == 'top'}">Top</button>
-      <button type="button" v-on:click="sortNew" v-bind:class="{filled: this.sort == 'new'}">New</button>
+      <button
+        type="button"
+        v-on:click="sortTop"
+        v-bind:class="{ filled: this.sort == 'top' }"
+      >
+        Top
+      </button>
+      <button
+        type="button"
+        v-on:click="sortNew"
+        v-bind:class="{ filled: this.sort == 'new' }"
+      >
+        New
+      </button>
     </div>
     <div class="comments">
-      <div
-        class="comment"
+      <Comment
         v-for="comment in sortedComments"
         :key="comment.id"
-      >
-        <Comment :comment="comment" />
-      </div>
+        :comment="comment"
+      />
       <p v-if="sortedComments.length == 0">No comments yet!</p>
     </div>
-    <h2 class="footer"><a href="https://github.com/jhuch-cs/Vue-Reddit-Clone">Github</a></h2>
+    <h2 class="footer">
+      <a href="https://github.com/jhuch-cs/Vue-Reddit-Clone">Github</a>
+    </h2>
   </div>
 </template>
 
@@ -52,7 +64,7 @@ export default {
       sort: "",
     };
   },
-  created: async function() {
+  created: async function () {
     let response = await axios.get(`/api/post/${this.$route.params.id}`);
     this.post = response.data;
   },
@@ -68,7 +80,10 @@ export default {
       };
       this.post.comments.push(newComment);
       this.commentText = "";
-      let response = await axios.post(`/api/replyToPost/${this.post.id}`, newComment);
+      let response = await axios.post(
+        `/api/replyToPost/${this.post.id}`,
+        newComment
+      );
       newComment.id = response.data.id;
     },
     sortTop() {
@@ -76,6 +91,9 @@ export default {
     },
     sortNew() {
       this.sort = "new";
+    },
+    deletedItem(id) {
+      console.log(`Comment with id ${id} was deleted`);
     },
   },
   computed: {
@@ -128,7 +146,7 @@ textarea {
   user-select: auto;
 }
 
-form > button { 
+form > button {
   background-color: #2c3e50;
   border: 1px white solid;
   border-radius: 5px;
@@ -189,7 +207,7 @@ button {
 
 .footer a {
   text-decoration: none !important;
-  color: white;  
+  color: white;
 }
 
 .footer a:hover {

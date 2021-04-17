@@ -251,13 +251,24 @@ app.put('/api/editComment/:id', async (req, res) => {
     }
 });
 
+async function getReplyIDs(parent, ids) {
+    for (childID of parent.replies) {
+        ids.push(childID);
+        let childComment = await Comment.findOne({ _id: childID });
+        getReplyIDs(childComment, ids);
+    }
+}
+
 app.delete('/api/editComment/:id', async (req, res) => {
     try {
         let comment = await Comment.findOne({ _id: req.params.id });
         if (!comment) { res.sendStatus(404); }
-        comment.deleted = true;
-        comment.text = "";
-        await comment.save();
+        let ids = [comment._id];
+        await getReplyIDs(comment, ids);
+        await Comment.updateMany({}, { $pull: { replies: comment._id } });
+        await Post.updateMany({}, { $pull: { comments: comment._id } });
+        await Comment.deleteMany({ _id: {$in: ids}});
+        res.sendStatus(200);
     } catch (error) {
         console.log(error);
         res.sendStatus(500);

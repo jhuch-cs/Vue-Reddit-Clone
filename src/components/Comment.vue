@@ -191,6 +191,8 @@ export default {
       this.comment.upvoted = false;
       this.comment.downvoted = false;
       await axios.delete(`/api/editComment/${this.comment.id}`);
+      this.$destroy();
+      this.$el.parentNode.removeChild(this.$el);
     },
   },
   computed: {
