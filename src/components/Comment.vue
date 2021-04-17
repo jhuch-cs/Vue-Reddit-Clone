@@ -175,7 +175,7 @@ export default {
         newComment.id = response.data.id;
       } else {
         this.comment.text = this.replyText;
-        await axios.post(`/api/editComment/${this.comment.id}`, {text: this.replyText});
+        await axios.put(`/api/editComment/${this.comment.id}`, {text: this.replyText});
       }
       this.replyText = "";
       this.isWritingReply = false;
@@ -183,7 +183,7 @@ export default {
     },
     async removeContents() {
       this.comment.text = "[deleted]";
-      await axios.post(`/api/editComment/${this.comment.id}`, {text: "[deleted]"});
+      await axios.put(`/api/editComment/${this.comment.id}`, {text: "[deleted]"});
     },
     async deleteComment() {
       this.comment.deleted = true;
