@@ -10,10 +10,10 @@
     <router-link to="/createPost">
       <button type="button">Create New Post</button>
     </router-link>
-    <!-- link to /createPost here -->
     <PostList :posts="posts" />
     <h2 class="footer">
       <a href="https://github.com/jhuch-cs/Vue-Reddit-Clone">Github</a>
+      <p>Hours: 6</p>
     </h2>
   </div>
 </template>
@@ -36,6 +36,12 @@ export default {
   created: async function () {
     let response = await axios.get("/api/posts?top=1");
     this.retrievedPosts = response.data;
+    try {
+      let user_response = await axios.put('/api/users');
+      this.$root.$data.user = user_response.data.user;
+    } catch (error) {
+      this.$root.$data.user = null;
+    }
   },
   computed: {
     posts() {
@@ -45,10 +51,13 @@ export default {
           (!post.image &&
             post.text.toLowerCase().search(text.toLowerCase()) >= 0) ||
           post.subreddit.toLowerCase().search(text.toLowerCase()) >= 0 ||
-          post.user.toLowerCase().search(text.toLowerCase()) >= 0 ||
+          post.user.username.toLowerCase().search(text.toLowerCase()) >= 0 ||
           post.title.toLowerCase().search(text.toLowerCase()) >= 0
       );
     },
+    user() {
+      return this.$root.$data.user;
+    }
   },
 };
 </script>
@@ -56,6 +65,7 @@ export default {
 <style scoped>
 .wrapper {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   margin-bottom: 20px;

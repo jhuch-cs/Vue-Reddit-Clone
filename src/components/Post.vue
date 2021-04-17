@@ -25,14 +25,14 @@
               class="link"
               >r/{{ this.post.subreddit }}</a
             >
-            · posted by u/{{ this.post.user }} {{ timeSince(this.post.date) }}
+            · posted by u/{{ this.post.user.username }} {{ timeSince(this.post.date) }}
           </h3>
         </div>
         <h2>{{ capitalizeFirstLetter(this.post.title) }}</h2>
       </div>
     </div>
     <router-link :to="'/post/' + this.post.id">
-      <div class="content">
+      <div class="content"> 
         <div v-if="post.image" class="image">
           <img :src="'..' + this.post.image" />
         </div>
@@ -84,7 +84,7 @@ export default {
       }
       this.post.upvoted = true;
       this.post.downvoted = false;
-      axios.post(`/api/upvotePost/${this.post.id}`); // TODO: Change this logic once we implement users and sessions
+      axios.post(`/api/upvotePost/${this.post.id}`);
     },
     downvote() {
       if (this.post.downvoted) {

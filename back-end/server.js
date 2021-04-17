@@ -15,13 +15,28 @@ mongoose.connect('mongodb://localhost:27017/reddit', {
     useUnifiedTopology: true
 });
 
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+    name: 'session',
+    keys: ['secretValue'],
+    cookie: {
+        maxAge: 24 * 60 * 60 * 1000
+    }
+}));
+
 const postSchema = new mongoose.Schema({
     subreddit: String,
-    icon: String, // subreddit icon
-    text: String, // for text posts
-    user: String, // String for now, eventually {type: mongoose.Schema.ObjectId, ref:'User'}
-    image: String, // filepath to string
-    date: String, // unix timestamp
+    icon: String,
+    text: String,
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
+    image: String,
+    date: String,
     comments: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -43,7 +58,10 @@ postSchema.set('toJSON', {
 
 const commentSchema = new mongoose.Schema({
     points: Number,
-    user: String, // TODO: make user table. Maybe AuthToken too.
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
     text: String,
     date: String,
     level: Number,
@@ -75,7 +93,11 @@ const upload = multer({
     }
 });
 
-app.post('/api/photos', upload.single('file'), async (req, res) => {
+let users = require("./users.js");
+const validUser = users.valid;
+app.use("/api/users", users.routes);
+
+app.post('/api/photos', validUser, upload.single('file'), async (req, res) => {
     if (!req.file) {
         return res.sendStatus(400);
     }
@@ -84,20 +106,21 @@ app.post('/api/photos', upload.single('file'), async (req, res) => {
     });
 });
 
-app.post('/api/:subreddit/post', async (req, res) => {
+app.post('/api/:subreddit/post', validUser, async (req, res) => {
     const post = new Post({
         subreddit: req.params.subreddit,
-        icon: `/public/images/icons/${req.params.subreddit}.jpg`, // subreddit icon
-        text: req.body.text, // for text posts
-        user: req.body.user, // String for now, eventually {type: mongoose.Schema.ObjectId, ref:'User'}
-        image: req.body.image, // filepath to string
-        date: Date.now().toString(), // unix timestamp
+        icon: `/public/images/icons/${req.params.subreddit}.jpg`,
+        text: req.body.text,
+        user: req.user,
+        image: req.body.image,
+        date: Date.now().toString(),
         comments: [],
         title: req.body.title,
         points: 0,
     });
     try {
         await post.save();
+        post.populate('user');
         res.send(post);
     } catch (error) {
         console.log(error);
@@ -108,7 +131,7 @@ app.post('/api/:subreddit/post', async (req, res) => {
 async function populateComments(post) {
     let loadedComments = [];
     for (commentID of post.comments) {
-        let comment = await Comment.findOne({ _id: commentID });
+        let comment = await Comment.findOne({ _id: commentID }).populate("user");
         if (!comment) { console.log(`ERROR :: Comment ${commentID} not found`); continue; }
         await populateReplies(comment);
         loadedComments.push(comment);
@@ -120,7 +143,7 @@ async function populateReplies(comment) {
     if (comment === null || comment === undefined) { return; }
     let loadedReplies = [];
     for (replyID of comment.replies) {
-        let reply = await Comment.findOne({ _id: replyID });
+        let reply = await Comment.findOne({ _id: replyID }).populate("user");
         if (!reply) { console.log(`ERROR :: Reply ${replyID} not found`); continue; }
         await populateReplies(reply);
         loadedReplies.push(reply)
@@ -130,7 +153,7 @@ async function populateReplies(comment) {
 
 app.get('/api/posts', async (req, res) => {
     try {
-        let posts = await Post.find();
+        let posts = await Post.find().populate("user");
         for (post of posts) {
             await populateComments(post);
         }
@@ -156,7 +179,7 @@ app.get('/api/posts', async (req, res) => {
 
 app.get('/api/post/:id', async (req, res) => {
     try {
-        let post = await Post.findOne({ _id: req.params.id });
+        let post = await Post.findOne({ _id: req.params.id }).populate("user");
         if (!post) { res.sendStatus(404); }
         await populateComments(post);
         res.send(post);
@@ -168,7 +191,7 @@ app.get('/api/post/:id', async (req, res) => {
 
 app.get('/api/:subreddit', async (req, res) => {
     try {
-        let posts = await Post.find({ subreddit: req.params.subreddit });
+        let posts = await Post.find({ subreddit: req.params.subreddit }).populate("user");
         for (post of posts) {
             await populateComments(post);
         }
@@ -192,11 +215,11 @@ app.get('/api/:subreddit', async (req, res) => {
     }
 });
 
-app.post('/api/replyToPost/:id', async (req, res) => {
+app.post('/api/replyToPost/:id', validUser, async (req, res) => {
     try {
         let comment = new Comment({
             points: 0,
-            user: req.body.user,
+            user: req.user, // from middleware
             text: req.body.text,
             date: Date.now().toString(),
             level: 0,
@@ -214,7 +237,7 @@ app.post('/api/replyToPost/:id', async (req, res) => {
     }
 });
 
-app.post('/api/replyToComment/:id', async (req, res) => {
+app.post('/api/replyToComment/:id', validUser, async (req, res) => {
     try {
         let parent = await Comment.findOne({ _id: req.params.id });
         if (!parent) {
@@ -222,7 +245,7 @@ app.post('/api/replyToComment/:id', async (req, res) => {
         }
         let comment = new Comment({
             points: 0,
-            user: req.body.user,
+            user: req.user,
             text: req.body.text,
             date: Date.now().toString(),
             level: parent.level + 1
@@ -238,10 +261,11 @@ app.post('/api/replyToComment/:id', async (req, res) => {
     }
 });
 
-app.put('/api/editComment/:id', async (req, res) => {
+app.put('/api/editComment/:id', validUser, async (req, res) => {
     try {
         let comment = await Comment.findOne({ _id: req.params.id });
-        if (!comment) { res.sendStatus(404); }
+        if (!comment) { res.sendStatus(404); return; }
+        if (comment.user.toHexString() !== req.user._id.toHexString()) { res.sendStatus(403); return; }
         comment.text = req.body.text;
         await comment.save();
         res.sendStatus(200);
@@ -259,15 +283,16 @@ async function getReplyIDs(parent, ids) {
     }
 }
 
-app.delete('/api/editComment/:id', async (req, res) => {
+app.delete('/api/editComment/:id', validUser, async (req, res) => {
     try {
         let comment = await Comment.findOne({ _id: req.params.id });
-        if (!comment) { res.sendStatus(404); }
+        if (!comment) { res.sendStatus(404); return; }
+        if (comment.user.toHexString() !== req.user._id.toHexString()) { res.sendStatus(403); return; }
         let ids = [comment._id];
         await getReplyIDs(comment, ids);
         await Comment.updateMany({}, { $pull: { replies: comment._id } });
         await Post.updateMany({}, { $pull: { comments: comment._id } });
-        await Comment.deleteMany({ _id: {$in: ids}});
+        await Comment.deleteMany({ _id: { $in: ids } });
         res.sendStatus(200);
     } catch (error) {
         console.log(error);
@@ -275,11 +300,11 @@ app.delete('/api/editComment/:id', async (req, res) => {
     }
 });
 
-app.post('/api/upvotePost/:id', async (req, res) => {
+app.post('/api/upvotePost/:id', validUser, async (req, res) => {
     try {
         let post = await Post.findOne({ _id: req.params.id });
-        if (!post) { res.sendStatus(404); }
-        post.points++; // TODO: needs additional logic once we implement users
+        if (!post) { res.sendStatus(404); return; }
+        post.points++;
         await post.save();
         res.sendStatus(200);
     } catch (error) {
@@ -288,11 +313,11 @@ app.post('/api/upvotePost/:id', async (req, res) => {
     }
 });
 
-app.post('/api/downvotePost/:id', async (req, res) => {
+app.post('/api/downvotePost/:id', validUser, async (req, res) => {
     try {
         let post = await Post.findOne({ _id: req.params.id });
-        if (!post) { res.sendStatus(404); }
-        post.points--; // TODO: needs additional logic once we implement users
+        if (!post) { res.sendStatus(404); return; }
+        post.points--;
         await post.save();
         res.sendStatus(200);
     } catch (error) {
@@ -301,11 +326,11 @@ app.post('/api/downvotePost/:id', async (req, res) => {
     }
 });
 
-app.post('/api/upvoteComment/:id', async (req, res) => {
+app.post('/api/upvoteComment/:id', validUser, async (req, res) => {
     try {
         let comment = await Comment.findOne({ _id: req.params.id });
         if (!comment) { res.sendStatus(404); }
-        comment.points++; // TODO: needs additional logic once we implement users
+        comment.points++;
         await comment.save();
         res.sendStatus(200);
     } catch (error) {
@@ -314,11 +339,11 @@ app.post('/api/upvoteComment/:id', async (req, res) => {
     }
 });
 
-app.post('/api/downvoteComment/:id', async (req, res) => {
+app.post('/api/downvoteComment/:id', validUser, async (req, res) => {
     try {
         let comment = await Comment.findOne({ _id: req.params.id });
         if (!comment) { res.sendStatus(404); }
-        comment.points--; // TODO: needs additional logic once we implement users
+        comment.points--;
         await comment.save();
         res.sendStatus(200);
     } catch (error) {
@@ -327,4 +352,4 @@ app.post('/api/downvoteComment/:id', async (req, res) => {
     }
 });
 
-app.listen(3001, () => console.log('Server listening on port 3001!'));
+app.listen(3005, () => console.log('Server listening on port 3005!'));

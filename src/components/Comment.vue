@@ -20,7 +20,7 @@
         <div class="details">
           <div v-if="!this.comment.deleted">
             <h3>
-              posted by u/{{ this.comment.user }}
+              posted by u/{{ this.comment.user.username }}
               {{ timeSince(this.comment.date) }}
             </h3>
             <div class="content">
@@ -33,17 +33,17 @@
             <h3>Comment deleted by user.</h3>
           </div>
         </div>
-        <div v-if="!this.comment.deleted" class="info">
+        <div v-if="!this.comment.deleted && user" class="info">
           <button type="button" class="reply" v-on:click="startReply">
             Reply
           </button>
-          <button type="button" class="edit" v-on:click="startEdit">
+          <button type="button" class="edit" v-if="this.sameUser" v-on:click="startEdit">
             Edit
           </button>
-          <button type="button" class="delete" v-on:click="removeContents">
+          <button type="button" class="delete" v-if="this.sameUser" v-on:click="removeContents">
             Delete
           </button>
-          <button type="button" class="delete" v-on:click="deleteComment">
+          <button type="button" class="delete" v-if="this.sameUser" v-on:click="deleteComment">
             Super Delete
           </button>
           <div
@@ -131,7 +131,7 @@ export default {
       }
       this.comment.upvoted = true;
       this.comment.downvoted = false;
-      axios.post(`/api/upvoteComment/${this.comment.id}`); // TODO: Change this logic once we implement users and sessions
+      axios.post(`/api/upvoteComment/${this.comment.id}`);
     },
     downvote() {
       if (this.comment.deleted) {
@@ -164,7 +164,7 @@ export default {
       if (this.isWritingReply) {
         let newComment = {
           points: 0,
-          user: "defaultUser",
+          user: this.user,
           text: this.replyText,
           date: Date.now().toString(),
           replies: [],
@@ -208,6 +208,12 @@ export default {
       } else {
         return "Comment";
       }
+    }, 
+    user() {
+      return this.$root.$data.user;
+    },
+    sameUser() {
+      return this.$root.$data.user.username === this.comment.user.username;
     }
   },
 };

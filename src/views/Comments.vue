@@ -2,7 +2,7 @@
   <div class="post">
     <div class="post-content">
       <Post :post="post" />
-      <div class="new-comment">
+      <div class="new-comment" v-if="user">
         <form class="pure-form" v-on:submit.prevent="newComment">
           <textarea
             name="paragraph_text"
@@ -15,6 +15,7 @@
           <button type="submit">Comment</button>
         </form>
       </div>
+      <p v-else>Please login to comment</p> <!-- Present login on click -->
     </div>
     <div class="sort">
       <button
@@ -42,6 +43,7 @@
     </div>
     <h2 class="footer">
       <a href="https://github.com/jhuch-cs/Vue-Reddit-Clone">Github</a>
+      <p>Hours: 6</p>
     </h2>
   </div>
 </template>
@@ -67,12 +69,18 @@ export default {
   created: async function () {
     let response = await axios.get(`/api/post/${this.$route.params.id}`);
     this.post = response.data;
+    try {
+      let user_response = await axios.put('/api/users');
+      this.$root.$data.user = user_response.data.user;
+    } catch (error) {
+      this.$root.$data.user = null;
+    }
   },
   methods: {
     async newComment() {
       let newComment = {
         points: 0,
-        user: "defaultUser",
+        user: this.user,
         text: this.commentText,
         date: Date.now().toString(),
         replies: [],
@@ -117,6 +125,9 @@ export default {
         return this.post.comments;
       }
     },
+    user() {
+      return this.$root.$data.user;
+    }
   },
 };
 </script>

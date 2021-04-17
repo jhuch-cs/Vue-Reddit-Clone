@@ -1,12 +1,7 @@
 <template>
   <div class="home">
-    <div class="wrapper">
+    <div class="wrapper" v-if="user">
       <div class="postInfo">
-        <div class="field subreddit">
-          <form class="pure-form">
-            <input v-model="username" placeholder="Username" />
-          </form>
-        </div>
         <div class="field subreddit">
           <form class="pure-form">
             <input v-model="subreddit" placeholder="Subreddit" />
@@ -29,13 +24,16 @@
               v-if="!this.file"
             ></textarea>
             <br />
-            <button type="submit" v-on:click.prevent="uploadPost()">Post</button>
+            <button type="submit" v-on:click.prevent="uploadPost()">
+              Post
+            </button>
           </form>
         </div>
       </div>
     </div>
     <h2 class="footer">
       <a href="https://github.com/jhuch-cs/Vue-Reddit-Clone">Github</a>
+      <p>Hours: 6</p>
     </h2>
   </div>
 </template>
@@ -51,10 +49,24 @@ export default {
       title: "",
       subreddit: "",
       postBody: "",
-      username: "",
     };
   },
-  computed: {},
+  async created() {
+    try {
+      let response = await axios.put("/api/users");
+      this.$root.$data.user = response.data.user;
+    } catch (error) {
+      this.$root.$data.user = null;
+    }
+    if (this.user === null || this.user === undefined) {
+      this.$router.push('LoginPage');
+    }
+  },
+  computed: {
+    user() {
+      return this.$root.$data.user;
+    },
+  },
   methods: {
     fileChanged(event) {
       this.file = event.target.files[0];
@@ -71,13 +83,12 @@ export default {
           title: this.title,
           subreddit: this.subreddit,
           text: this.postBody,
-          user: this.username, // TODO: replace me when we implement users and sessions
           image: this.file ? r1.data.path : null,
         });
         this.title = "";
         this.subreddit = "";
         this.postBody = "";
-        this.$router.push({name: 'Home'});
+        this.$router.push({ name: "Home" });
       } catch (error) {
         console.log(error);
       }
